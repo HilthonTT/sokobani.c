@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.cc }} / ${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        cc: [gcc, clang]
+        build: [debug, release, sanitize]
+        include:
+          - os: macos-latest
+            cc: clang
+            build: debug
+          - os: macos-latest
+            cc: clang
+            build: release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make CC=${{ matrix.cc }} BUILD=${{ matrix.build }} WERROR=1
+      - name: Test
+        run: make CC=${{ matrix.cc }} BUILD=${{ matrix.build }} WERROR=1 test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y clang-format clang-tidy
+      - name: Check formatting
+        run: make format-check
+      - name: Static analysis
+        run: make tidy

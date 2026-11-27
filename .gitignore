@@ -53,3 +53,14 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Build output
+build/
+
+# Tooling
+compile_commands.json
+.cache/
+.vscode/
+.idea/
+*.swp
+.DS_Store

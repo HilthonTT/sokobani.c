@@ -1,0 +1,10 @@
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  performance-*,
+  portability-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-reserved-identifier
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(src|tests)/.*'
