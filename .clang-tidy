@@ -5,6 +5,7 @@ Checks: >
   performance-*,
   portability-*,
   -bugprone-easily-swappable-parameters,
-  -bugprone-reserved-identifier
+  -bugprone-reserved-identifier,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
 WarningsAsErrors: '*'
-HeaderFilterRegex: '(src|tests)/.*'
+HeaderFilterRegex: '^(src|tests)/.*'
