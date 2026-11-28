@@ -39,18 +39,63 @@ else
   $(error Unknown BUILD '$(BUILD)', expected debug, release or sanitize)
 endif
 
+RAYLIB_VERSION := 5.5
+RAYLIB_DIR     := build/deps/raylib-$(RAYLIB_VERSION)
+RAYLIB_URL     := https://github.com/raysan5/raylib/archive/refs/tags/$(RAYLIB_VERSION).tar.gz
+UNAME_S        := $(shell uname -s)
+
+ifeq ($(shell pkg-config --exists raylib 2>/dev/null && echo yes),yes)
+  RAYLIB_CFLAGS := $(shell pkg-config --cflags raylib)
+  RAYLIB_LIBS   := $(shell pkg-config --libs raylib)
+  RAYLIB_DEP    :=
+  RAYLIB_HEADER :=
+else
+  RAYLIB_CFLAGS := -isystem $(RAYLIB_DIR)/src
+  RAYLIB_DEP    := $(RAYLIB_DIR)/src/libraylib.a
+  RAYLIB_HEADER := $(RAYLIB_DIR)/src/raylib.h
+  ifeq ($(UNAME_S),Darwin)
+    RAYLIB_LIBS := $(RAYLIB_DEP) -framework CoreVideo -framework IOKit \
+                   -framework Cocoa -framework GLUT -framework OpenGL
+  else
+    RAYLIB_LIBS := $(RAYLIB_DEP) -lGL -lm -lpthread -ldl -lrt -lX11
+  endif
+endif
+
 ifeq ($(WERROR),1)
   CFLAGS += -Werror
 endif
 
 FORMAT_FILES := $(shell find $(SRC_DIR) $(TEST_DIR) -name '*.[ch]')
 
-.PHONY: all run test format format-check tidy install uninstall clean help
+.PHONY: all run test format format-check tidy install uninstall clean help raylib
 
 all: $(BIN)
 
-$(BIN): $(OBJS)
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+$(BIN): $(OBJS) $(RAYLIB_DEP)
+	$(CC) $(LDFLAGS) $(OBJS) $(RAYLIB_LIBS) $(LDLIBS) -o $@
+
+FONT_TTF    := assets/fonts/pixantiqua.ttf
+FONT_HEADER := $(BUILD_DIR)/gen/font_data.h
+
+$(BUILD_DIR)/$(SRC_DIR)/main.o: CPPFLAGS += $(RAYLIB_CFLAGS) -I$(BUILD_DIR)/gen
+$(BUILD_DIR)/$(SRC_DIR)/main.o: $(FONT_HEADER) | $(RAYLIB_HEADER)
+
+$(FONT_HEADER): $(FONT_TTF)
+	@mkdir -p $(@D)
+	{ echo 'static const unsigned char FONT_DATA[] = {'; \
+	  od -An -v -tx1 $< | sed -e 's/\([0-9a-f][0-9a-f]\)/0x\1,/g'; \
+	  echo '};'; } > $@
+
+raylib: $(RAYLIB_DEP)
+
+$(RAYLIB_DIR)/src/raylib.h:
+	@mkdir -p build/deps
+	curl -fsSL $(RAYLIB_URL) | tar xz -C build/deps
+	@touch $@
+
+$(RAYLIB_DIR)/src/libraylib.a: | $(RAYLIB_DIR)/src/raylib.h
+	$(MAKE) -C $(RAYLIB_DIR)/src MAKEFLAGS= CC=$(CC) PLATFORM=PLATFORM_DESKTOP \
+		RAYLIB_BUILD_MODE=RELEASE
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(@D)
@@ -71,8 +116,8 @@ format:
 format-check:
 	clang-format --dry-run --Werror $(FORMAT_FILES)
 
-tidy:
-	clang-tidy $(SRCS) $(TEST_SRCS) -- $(filter-out -MMD -MP,$(CPPFLAGS)) -std=c11
+tidy: $(FONT_HEADER) | $(RAYLIB_HEADER)
+	clang-tidy $(SRCS) $(TEST_SRCS) -- $(filter-out -MMD -MP,$(CPPFLAGS)) $(RAYLIB_CFLAGS) -I$(BUILD_DIR)/gen -std=c11
 
 install: $(BIN)
 	install -d $(DESTDIR)$(PREFIX)/bin
@@ -85,7 +130,7 @@ clean:
 	rm -rf build
 
 help:
-	@echo "Targets: all run test format format-check tidy install uninstall clean"
+	@echo "Targets: all run test raylib format format-check tidy install uninstall clean"
 	@echo "Variables: BUILD=debug|release|sanitize CC=<compiler> WERROR=1 PREFIX=<path>"
 
 -include $(DEPS)
