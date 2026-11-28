@@ -103,7 +103,7 @@ static Board layout_board(const Game *game) {
   board.tile = tile;
   board.x =
       floorf(((float)GetScreenWidth() - tile * (float)game->width) / 2.0f);
-  board.y = floorf((float)HUD_TOP + BOARD_MARGIN +
+  board.y = floorf((float)(HUD_TOP + BOARD_MARGIN) +
                    (avail_h - tile * (float)game->height) / 2.0f);
   return board;
 }
