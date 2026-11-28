@@ -256,15 +256,18 @@ static void draw_text_centered(const char *text, float y, int scale,
 static void draw_hud(const App *app, const Board *board) {
   const Game *game = &app->game;
   char level[32];
+  char total[16];
   char stats[64];
   snprintf(level, sizeof level, "Level %d", app->level + 1);
+  snprintf(total, sizeof total, "/ %d", levels_count());
   snprintf(stats, sizeof stats, "%d moves   %d pushes", game->moves,
            game->pushes);
 
   float board_w = board->tile * (float)game->width;
   float left = board->x;
   float right = board->x + board_w;
-  float needed = text_width(level, 2) + text_width(stats, 2) + 48.0f;
+  float total_x = text_width(level, 2) + 10.0f;
+  float needed = total_x + text_width(total, 2) + text_width(stats, 2) + 48.0f;
   if (board_w < needed) {
     left = (float)BOARD_MARGIN;
     right = (float)(GetScreenWidth() - BOARD_MARGIN);
@@ -272,8 +275,7 @@ static void draw_hud(const App *app, const Board *board) {
   float y = board->y - (float)(FONT_BASE * 2) - 14.0f;
 
   draw_text(level, left, y, 2, COLOR_TEXT);
-  draw_text(TextFormat("/ %d", levels_count()),
-            left + text_width(level, 2) + 10.0f, y, 2, COLOR_TEXT_DIM);
+  draw_text(total, left + total_x, y, 2, COLOR_TEXT_DIM);
   draw_text(stats, right - text_width(stats, 2), y, 2, COLOR_TEXT_DIM);
 
   float t = (float)GetTime();
@@ -325,15 +327,19 @@ static void draw_help(void) {
 }
 
 static void draw_complete(const App *app) {
-  Rectangle panel = draw_panel(460.0f, 200.0f);
-  draw_text_centered(app->all_done ? "All levels complete" : "Level complete",
-                     panel.y + 32.0f, 3, COLOR_TEXT);
-  draw_text_centered(TextFormat("%d moves   %d pushes", app->game.moves,
-                                app->game.pushes),
-                     panel.y + 104.0f, 2, COLOR_TEXT_DIM);
-  draw_text_centered(app->all_done ? "Press Enter to play again"
-                                   : "Press Enter to continue",
-                     panel.y + 152.0f, 1, COLOR_TEXT_DIM);
+  const char *title = app->all_done ? "All levels complete" : "Level complete";
+  const char *prompt =
+      app->all_done ? "Press Enter to play again" : "Press Enter to continue";
+  char stats[64];
+  snprintf(stats, sizeof stats, "%d moves   %d pushes", app->game.moves,
+           app->game.pushes);
+
+  float width = fmaxf(text_width(title, 3), text_width(stats, 2));
+  width = fmaxf(460.0f, width + 80.0f);
+  Rectangle panel = draw_panel(width, 200.0f);
+  draw_text_centered(title, panel.y + 32.0f, 3, COLOR_TEXT);
+  draw_text_centered(stats, panel.y + 104.0f, 2, COLOR_TEXT_DIM);
+  draw_text_centered(prompt, panel.y + 152.0f, 1, COLOR_TEXT_DIM);
 }
 
 static void load_level(App *app, int level) {
