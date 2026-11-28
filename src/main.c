@@ -93,16 +93,16 @@ static Board layout_board(const Game *game) {
   float avail_w = (float)(GetScreenWidth() - 2 * BOARD_MARGIN);
   float avail_h =
       (float)(GetScreenHeight() - HUD_TOP - HUD_BOTTOM - 2 * BOARD_MARGIN);
-  float tile = fminf(avail_w / (float)game->width,
-                     avail_h / (float)game->height);
+  float tile =
+      fminf(avail_w / (float)game->width, avail_h / (float)game->height);
   tile = floorf(fminf(tile, (float)MAX_TILE));
   if (tile < 8.0f) {
     tile = 8.0f;
   }
   Board board;
   board.tile = tile;
-  board.x = floorf(((float)GetScreenWidth() - tile * (float)game->width) /
-                   2.0f);
+  board.x =
+      floorf(((float)GetScreenWidth() - tile * (float)game->width) / 2.0f);
   board.y = floorf((float)HUD_TOP + BOARD_MARGIN +
                    (avail_h - tile * (float)game->height) / 2.0f);
   return board;
@@ -236,8 +236,7 @@ static void draw_board(const App *app, const Board *board, float time) {
 }
 
 static float text_width(const char *text, int scale) {
-  return MeasureTextEx(ui_font, text, (float)(FONT_BASE * scale),
-                       (float)scale)
+  return MeasureTextEx(ui_font, text, (float)(FONT_BASE * scale), (float)scale)
       .x;
 }
 
@@ -249,8 +248,8 @@ static void draw_text(const char *text, float x, float y, int scale,
 
 static void draw_text_centered(const char *text, float y, int scale,
                                Color color) {
-  draw_text(text, ((float)GetScreenWidth() - text_width(text, scale)) / 2.0f,
-            y, scale, color);
+  draw_text(text, ((float)GetScreenWidth() - text_width(text, scale)) / 2.0f, y,
+            scale, color);
 }
 
 static void draw_hud(const App *app, const Board *board) {
@@ -477,8 +476,7 @@ int main(int argc, char **argv) {
     level = (int)n - 1;
   }
 
-  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT |
-                 FLAG_VSYNC_HINT);
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT);
   SetTraceLogLevel(LOG_ERROR);
   InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Sokobani");
   SetWindowMinSize(640, 480);
