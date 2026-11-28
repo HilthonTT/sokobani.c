@@ -24,7 +24,7 @@ make tidy
 - C11, no compiler extensions.
 - Formatting is enforced by `clang-format`; do not hand-format.
 - Functions that are not part of a header's interface are `static`.
-- Every `.c` module in `src/` (except `main.c`) is linked into the test binaries, so keep game logic out of `main.c` to make it testable.
+- Every `.c` module in `src/` (except `main.c`) is linked into the test binaries, so keep game logic out of `main.c` to make it testable. `main.c` is the only file that uses raylib, which keeps the tests headless.
 
 ## Adding tests
 
